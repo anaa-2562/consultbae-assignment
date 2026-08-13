@@ -1,0 +1,302 @@
+{
+  "name": "ConsultBae - LLM skill category tagger",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1c0f5e2-0001-4a10-9b01-000000000001",
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-460, 40]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consultbae/tag-skills",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1c0f5e2-0002-4a10-9b01-000000000002",
+      "name": "Webhook trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-460, 240],
+      "webhookId": "c0nsultbae-tag-skills-0001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-1",
+              "name": "api_base",
+              "value": "http://host.docker.internal:8000",
+              "type": "string"
+            },
+            {
+              "id": "cfg-2",
+              "name": "batch_limit",
+              "value": 25,
+              "type": "number"
+            },
+            {
+              "id": "cfg-3",
+              "name": "min_confidence",
+              "value": 0.6,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1c0f5e2-0003-4a10-9b01-000000000003",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-240, 140],
+      "notes": "host.docker.internal reaches the FastAPI app when n8n runs in Docker. Use http://localhost:8000 for a native n8n install, or your ngrok URL for n8n Cloud."
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.api_base }}/api/people?untagged=true&limit={{ $json.batch_limit }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "a1c0f5e2-0004-4a10-9b01-000000000004",
+      "name": "Fetch untagged people",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-20, 140],
+      "notes": "GET /api/people?untagged=true - people from the merged DB that have skills but no skill_category yet. n8n turns the JSON array into one item per person."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-skills",
+              "leftValue": "={{ $json.skills }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1c0f5e2-0005-4a10-9b01-000000000005",
+      "name": "Has skills?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [200, 140]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are classifying a talent pool for a staffing company.\n\nPerson: {{ $json.full_name }}\nCity: {{ $json.city }}\nSkills: {{ $json.skills }}\n\nAssign EXACTLY ONE category:\n- \"automation-heavy\": the skill set centres on workflow automation / AI orchestration tooling (n8n, Zapier, Make, LangChain, LLM pipelines, RPA, scraping used for automation).\n- \"web-dev\": the skill set centres on building web applications (React, JavaScript, front-end, FastAPI/Django as app backends, REST API development).\n- \"data\": the skill set centres on data work (SQL, MySQL, MongoDB, Pandas, ETL, analytics, reporting).\n- \"generalist\": genuinely mixed with no dominant centre of gravity.\n\nRules:\n- Judge the CENTRE OF GRAVITY of the whole set, not the presence of one keyword. \"Docker\" alone decides nothing.\n- Databases used only to back a web app do not make someone \"data\".\n- confidence is your own calibrated probability that a human recruiter would agree, 0-1.\n- reason must be one short sentence naming the skills that decided it.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a precise classifier. Answer only with the requested JSON object."
+        }
+      },
+      "id": "a1c0f5e2-0006-4a10-9b01-000000000006",
+      "name": "Classify skill category",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [440, 40]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "a1c0f5e2-0007-4a10-9b01-000000000007",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [400, 260],
+      "notes": "Swap for Ollama / Groq / Gemini - any chat model node works here. temperature 0 so re-runs are reproducible."
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"skill_category\": {\n      \"type\": \"string\",\n      \"enum\": [\"automation-heavy\", \"web-dev\", \"data\", \"generalist\"]\n    },\n    \"confidence\": { \"type\": \"number\", \"minimum\": 0, \"maximum\": 1 },\n    \"reason\": { \"type\": \"string\" }\n  },\n  \"required\": [\"skill_category\", \"confidence\", \"reason\"]\n}"
+      },
+      "id": "a1c0f5e2-0008-4a10-9b01-000000000008",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [580, 260],
+      "notes": "Forces the model onto the 4-value enum. Without this the LLM invents categories like 'AI/ML' and the API rejects the write-back with a 422."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Re-attach the person the classification belongs to, and guard the LLM output.\n// $('Has skills?') is indexed by item, so classification N maps to person N.\nconst VALID = ['automation-heavy', 'web-dev', 'data', 'generalist'];\nconst minConfidence = $('Config').first().json.min_confidence ?? 0.6;\nconst out = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const person = $('Has skills?').all()[i].json;\n  const raw = items[i].json.output ?? items[i].json;\n  const category = String(raw.skill_category || '').trim().toLowerCase();\n  const confidence = Number(raw.confidence);\n\n  const valid = VALID.includes(category);\n  const confident = Number.isFinite(confidence) && confidence >= minConfidence;\n\n  out.push({\n    json: {\n      person_id: person.person_id,\n      full_name: person.full_name,\n      skills: person.skills,\n      skill_category: valid ? category : 'generalist',\n      confidence: Number.isFinite(confidence) ? confidence : 0,\n      reason: raw.reason || '',\n      accepted: valid && confident,\n      note: !valid\n        ? `model returned an out-of-vocabulary category: ${raw.skill_category}`\n        : !confident\n          ? `confidence ${confidence} below threshold ${minConfidence}`\n          : 'ok',\n    },\n  });\n}\n\nreturn out;"
+      },
+      "id": "a1c0f5e2-0009-4a10-9b01-000000000009",
+      "name": "Validate LLM output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 40]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "accepted",
+              "leftValue": "={{ $json.accepted }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1c0f5e2-0010-4a10-9b01-000000000010",
+      "name": "Confident enough?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1020, 40],
+      "notes": "Low-confidence rows are NOT written back - they go to the review branch instead. Silently writing a guess is worse than leaving the field null."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Config').first().json.api_base }}/api/people/{{ $json.person_id }}/skill-category",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ skill_category: $json.skill_category, confidence: $json.confidence, tagged_by: 'n8n-llm' }) }}",
+        "options": {}
+      },
+      "id": "a1c0f5e2-0011-4a10-9b01-000000000011",
+      "name": "Write category back",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, -60],
+      "notes": "PATCH /api/people/{id}/skill-category - the API re-validates the enum server-side, so a broken flow cannot corrupt the column."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Everything the flow refused to write, kept as one payload for a human.\nreturn [{ json: {\n  needs_review: items.map(i => ({\n    person_id: i.json.person_id,\n    full_name: i.json.full_name,\n    skills: i.json.skills,\n    proposed: i.json.skill_category,\n    confidence: i.json.confidence,\n    note: i.json.note,\n  })),\n  count: items.length,\n} }];"
+      },
+      "id": "a1c0f5e2-0012-4a10-9b01-000000000012",
+      "name": "Collect for human review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1240, 180]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "a1c0f5e2-0013-4a10-9b01-000000000013",
+      "name": "Aggregate results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [1460, -60]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, tagged: $json.data ? $json.data.length : 0, source: 'n8n-llm-skill-tagger' }) }}",
+        "options": {}
+      },
+      "id": "a1c0f5e2-0014-4a10-9b01-000000000014",
+      "name": "Respond to webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1680, -60]
+    },
+    {
+      "parameters": {
+        "content": "## What this flow does\n\n1. Pulls people from the merged SQLite DB that have skills but no `skill_category`\n2. Sends each one's skill list to an LLM with a 4-value enum\n3. Validates the answer (enum + confidence threshold) in code\n4. PATCHes the category back into the same `person` row\n5. Anything low-confidence or out-of-vocabulary is collected for a human instead of written\n\nThe database is reached through the FastAPI app from Task 3 (`app/main.py`), so\nn8n never touches the SQLite file directly - two writers on one SQLite file is a\nlocking problem waiting to happen.",
+        "height": 320,
+        "width": 460
+      },
+      "id": "a1c0f5e2-0015-4a10-9b01-000000000015",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-460, -400]
+    }
+  ],
+  "connections": {
+    "Run manually": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Webhook trigger": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Fetch untagged people", "type": "main", "index": 0 }]]
+    },
+    "Fetch untagged people": {
+      "main": [[{ "node": "Has skills?", "type": "main", "index": 0 }]]
+    },
+    "Has skills?": {
+      "main": [[{ "node": "Classify skill category", "type": "main", "index": 0 }], []]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "Classify skill category", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [[{ "node": "Classify skill category", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "Classify skill category": {
+      "main": [[{ "node": "Validate LLM output", "type": "main", "index": 0 }]]
+    },
+    "Validate LLM output": {
+      "main": [[{ "node": "Confident enough?", "type": "main", "index": 0 }]]
+    },
+    "Confident enough?": {
+      "main": [
+        [{ "node": "Write category back", "type": "main", "index": 0 }],
+        [{ "node": "Collect for human review", "type": "main", "index": 0 }]
+      ]
+    },
+    "Write category back": {
+      "main": [[{ "node": "Aggregate results", "type": "main", "index": 0 }]]
+    },
+    "Aggregate results": {
+      "main": [[{ "node": "Respond to webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "consultbae-assignment"
+  },
+  "tags": []
+}

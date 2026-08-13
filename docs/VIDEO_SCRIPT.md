@@ -1,226 +1,378 @@
-# 6-minute video script
+# Video script — shot by shot
 
-Spoken lines below are **~820 words** = about **5 min 30 of talking** at a normal
-pace, plus ~20-25s of clicking/loading pauses. Lands at **~5:50**. Ceiling is 6:00 —
-if you talk fast you'll finish at 5:15, which is fine. Going over is not.
+Everything below is literal: which window, where the cursor goes, what appears on
+screen, and the exact words. Target **5:40**, hard ceiling **6:00**.
 
-Know the beats, then say them in your own words. Slightly rough and confident
-beats polished and read out.
+Two things this script won't do for you: it won't make you sound like you memorised it
+(don't — know the beat, say it your way), and it can't answer the follow-up questions
+on the call. Read `docs/DATA_ISSUES.md` and the stuck log in the README once before you
+record. It shows in the voice.
 
 ---
 
-## Before you hit record (10 minutes of setup, saves 3 retakes)
+# PART 0 — Setup before you press record
 
-**Terminal 1 — app running:**
-```bash
-cd consultbae-assignment && source .venv/bin/activate
-uvicorn app.main:app --port 8000
-```
+## 0.1 Screen and audio
 
-**Terminal 2 — the one you type in on camera.** Pre-run everything once so nothing
-downloads or compiles live, then `clear`.
+| Setting | Value | Why |
+|---|---|---|
+| Resolution | 1440×900 (or 1080p) | Bigger and text is unreadable once compressed |
+| Terminal font | 16–18pt | Reviewer watches this in a small window |
+| Browser zoom | 100%, 110% for the n8n canvas | n8n nodes are tiny by default |
+| Mic | Headset or phone earphones, close to mouth | Laptop mic in a room = echo |
+| Notifications | macOS → Do Not Disturb | One WhatsApp popup = re-record |
+| Recorder | Loom, or QuickTime / OBS | Loom gives you the shareable link directly |
+| Capture | **Full screen**, not a single window | You switch between terminal, browser, editor |
+| Face cam | Optional, small, bottom-right | Voice is required; face is not |
 
-**n8n already running, flow already imported, credential already added, and
-executed successfully at least once.** You'll re-run it on camera. You do not want
-to be debugging an API key on video.
+Do a 10-second test recording and play it back. Check: voice audible, terminal text
+readable, cursor visible.
 
-**Browser tabs, left to right:**
+## 0.2 Windows to open before you record
 
-1. `http://localhost:8000/` — submit page
-2. `http://localhost:8000/submissions`
-3. `http://localhost:5678` — n8n, flow open on the canvas
-4. GitHub repo
-5. `docs/DATA_ISSUES.md` rendered on GitHub
+Arrange these so you can switch with `Cmd+Tab` without hunting:
 
-**Reset state so the demo is clean:**
+1. **Terminal A** — the app server, already running:
+   ```bash
+   cd consultbae-assignment && source .venv/bin/activate
+   uvicorn app.main:app --port 8000
+   ```
+   Push this mostly off-screen. You never show it, it just has to stay alive.
+
+2. **Terminal B** — the one you type in on camera. Big font, screen cleared.
+
+3. **Chrome, 5 tabs, in this order:**
+   1. `http://localhost:8000/` — submit page
+   2. `http://localhost:8000/submissions`
+   3. `http://localhost:5678` — n8n, flow **open on the canvas**
+   4. `https://github.com/anaa-2562/consultbae-assignment`
+   5. `https://github.com/anaa-2562/consultbae-assignment/blob/main/docs/DATA_ISSUES.md`
+
+4. **VS Code** with `src/audio_features.py` open, scrolled to `extract`, and
+   `src/matching.py` in a second tab.
+
+5. A **short audio file on your Desktop** as a backup, in case the mic-permission
+   dialog appears mid-take.
+
+## 0.3 Reset the demo state
+
+In terminal B, then `clear`:
+
 ```bash
 rm -f data/consultbae.db* data/audio/2026*
 python -m src.pipeline --quiet
+python -m pytest -q          # confirm "57 passed"
+clear
 ```
-Then submit one clip through the app so the submissions page isn't empty — you'll
-add a second one live.
 
-**Recording:** 1440×900 or 1080p, terminal font bumped up, mic close, notifications
-off. Loom or OBS, both fine. Say your name once at the start. **Never say "the AI
-wrote this"** — you built it, you're explaining it.
+Then submit **one** clip through the app manually, so the submissions page isn't empty
+when you reach it — you'll add a second one live on camera.
 
----
+## 0.4 n8n — do this BEFORE recording, not during
 
-## The script
+- Flow imported from `n8n/consultbae_skill_tagger.json`
+- `Config` node → `api_base` correct for your setup
+- Chat-model credential added and **saved**
+- Flow executed successfully **at least once**
+- Then clear the tags so the flow has work to do on camera:
+  ```bash
+  python -c "import sqlite3;c=sqlite3.connect('data/consultbae.db');c.execute('UPDATE person SET skill_category=NULL');c.commit()"
+  ```
 
-### 0:00 – 0:20 — Intro *(GitHub repo)*
-
-> "Hi, I'm Dipanshu — my submission for the ConsultBae AI Automation assignment.
-> Three messy CSVs merged into one clean database, an n8n flow with an LLM step on top,
-> and a small audio app writing into the same database. I'll run all of it, then talk
-> through the two things I found hardest."
-
-*Scroll the README once, slowly. Don't read it aloud.*
+Skip this and you will burn a take debugging an API key on video.
 
 ---
 
-### 0:20 – 1:20 — Task 1: the merge *(terminal)*
+# PART 1 — The recording, shot by shot
+
+Legend: **[SCREEN]** = what the viewer sees · **[DO]** = your action ·
+**[SAY]** = your words.
+
+---
+
+## SHOT 1 · 0:00 – 0:20 · Intro
+
+**[SCREEN]** Chrome tab 4 — the GitHub repo, scrolled to top, README visible.
+
+**[DO]** Start recording. Sit still for one second before speaking (Loom clips the
+first half-second). Then scroll the README slowly, about one screen, while talking.
+
+**[SAY]**
+> "Hi, I'm Dipanshu — this is my submission for the ConsultBae AI Automation
+> assignment. Three messy CSVs merged into one clean database, an n8n flow with an LLM
+> step on top, and a small audio app writing into the same database. I'll run all of
+> it, then talk through the two things I found hardest."
+
+**Do not** read the README aloud. It's a backdrop.
+
+---
+
+## SHOT 2 · 0:20 – 1:20 · Task 1, the merge
+
+**[DO]** `Cmd+Tab` to terminal B. Type it live — typing reads as real, pasting reads
+as prepared:
 
 ```bash
 python -m src.pipeline
 ```
 
-Talk over the output — it finishes in about a second:
+**[SCREEN]** Output appears in under a second:
 
+```
+raw rows read      : 105
+  ingested         : 102
+  skipped/rejected : 3
+unique people      : 56
+  in all 3 sources : 15
+merge methods      : {'single_source': 25, 'email,phone': 16, 'phone': 11, 'name_city': 4}
+data issues logged : 308 across 24 distinct codes
+queued for review  : 1
+```
+
+**[SAY]** — start the moment you hit Enter, don't wait for output:
 > "One command rebuilds everything. 105 raw rows in, 102 ingested, 56 unique people
-> out — 15 in all three systems.
+> out — 15 of them in all three systems.
 >
 > The hard part is there's no shared ID. Source two has emails but no phones, source
-> three has phones but no emails — so those two share nothing, and can only join
+> three has phones but no emails — so those two share nothing at all, and can only join
 > through source one, or on something weak like name and city.
 >
 > Three tiers into a union-find, which makes the links transitive. Exact email. Then
-> last ten digits of the phone, after normalising five formats. Then fuzzy name plus
-> canonical city — and that third one is the dangerous one."
+> the last ten digits of the phone, after normalising five different formats. Then
+> fuzzy name plus canonical city — and that third one is the dangerous one."
 
-*Point at the `merge methods` line as you say the tiers.*
+**[DO]** On "three tiers", move the cursor to the `merge methods` line and leave it
+there. One deliberate move, no mouse-waving.
 
 ---
 
-### 1:20 – 2:20 — Hardest decision #1: making the matcher abstain
+## SHOT 3 · 1:20 – 2:20 · Hardest decision #1 — making the matcher abstain
 
-**The most important minute in the video. Slow down here.**
+**The most important minute of the video. Slow down. Let the pauses land.**
+
+**[DO]** Still terminal B:
 
 ```bash
 python -c "import sqlite3;[print(r[0]) for r in sqlite3.connect('data/consultbae.db').execute('SELECT reason FROM match_review')]"
 ```
 
-> "Here's the one I got wrong first. Three Arjun Mehtas in Noida — one in source one,
-> one in source two, two in source three. One pair shares a phone, so those are the
-> same person. The rest share only a name and a city.
+**[SCREEN]**
+```
+ambiguous name+city block: 'Arjun Mehta' in Noida appears 1x in source1, 1x in
+source2, 2x in source3 - name+city cannot pick the right one
+```
+
+**[SAY]**
+> "Here's the one I got wrong first. There are three Arjun Mehtas in Noida — one in
+> source one, one in source two, and two in source three. One pair shares a phone
+> number, so those two are definitely the same person. The rest share only a name and
+> a city.
 >
 > My first version merged the source-one and source-two records, because my ambiguity
-> check only looked at the two sources being compared — it never saw source three had
-> two of them. Tests green, nothing crashed. I caught it by spot-checking every
-> repeated name and noticing one person had two completely different emails.
+> check only looked at the two sources being compared — it never saw that source three
+> had two of them. All the tests were green. Nothing crashed. I only caught it by
+> spot-checking every name that appears more than once, and noticing that one person
+> had two completely different email addresses.
 >
 > The fix wasn't a better string metric. The names are character-for-character
 > identical — no algorithm separates two real people with the same name in the same
 > city. The fix was making the weak tier abstain. If any source puts more than one
-> candidate into a name-and-city block, tier three doesn't fire there at all. And any
-> weak merge that would land two different emails, or two different phones, on one
-> person is rejected — if they were one person, the email tier would already have
-> matched them.
+> candidate into a name-and-city block, tier three doesn't fire in that block at all.
+> And any weak merge that would land two different emails, or two different phones, on
+> one person gets rejected — because if they were one person, the email tier would
+> already have matched them.
 >
 > Whatever it refuses goes to a review table for a human. The reasoning is asymmetric:
 > a wrong merge is unrecoverable — two people's salary and project counts are now one
-> row — but a missed merge is a five-second fix from a queue."
+> row and you can't unpick it — but a missed merge is a five-second fix from a queue."
+
+**[DO]** *Optional, if on time:* switch to VS Code → `src/matching.py` →
+`_ambiguity_reason`, let the three vetoes sit on screen for ~3 seconds while you
+finish. Don't read code aloud.
 
 ---
 
-### 2:20 – 3:05 — Task 2: the n8n flow *(n8n tab)*
+## SHOT 4 · 2:20 – 3:05 · Task 2, the n8n flow
 
-> "Task two. This flow pulls people from the merged database who have skills but no
-> category, sends each skill list to an LLM, and writes a category back onto the same
-> person row."
+**[DO]** Chrome tab 3 (n8n canvas). Whole flow visible — press `1` to zoom-to-fit
+before you start talking.
 
-**Click Execute Workflow.** While it runs:
+**[SAY]**
+> "Task two. This flow pulls people out of the merged database who have skills but no
+> category yet, sends each skill list to an LLM, and writes a category back onto the
+> same person row."
 
-> "Two things I'd defend. The structured output parser — without the enum pinned to
-> four values the model invents categories like 'AI/ML engineer' and my API rejects it.
-> And the confidence gate: below 0.6 nothing is written, the row goes to a review
-> branch. A wrong category that looks confident is worse than a null, because
-> recruiters filter on this field."
+**[DO]** Click **Execute Workflow**. Keep talking while the green checkmarks light up
+node by node — that animation is the proof it ran.
 
-*If you're under time, add:* "It goes through my API, not an SQLite node — two
-processes with write locks on one SQLite file is how you get 'database is locked' at
-the worst moment."
+**[SAY]**
+> "Two things I'd defend here. The structured output parser — without the enum pinned
+> to four values, the model invents categories like 'AI/ML engineer' and my API rejects
+> it with a 422. And the confidence gate: below 0.6 nothing gets written, the row goes
+> to a review branch instead. A wrong category that looks confident is worse than a
+> null, because recruiters filter on this field."
 
-Open the **Write category back** node to show a 200, then:
+**[DO]** Double-click the **Write category back** node → output panel opens → point at
+the `200` / returned JSON → `Esc`.
+
+**[DO]** `Cmd+Tab` to terminal B:
 ```bash
 curl -s localhost:8000/api/stats
 ```
-> "And there's the tagged count going up."
+**[SCREEN]** `{"people":56,...,"tagged":43}`
+
+**[SAY]**
+> "And there's the tagged count going up in the database."
 
 ---
 
-### 3:05 – 4:05 — Task 3: the audio app *(submit page)*
+## SHOT 5 · 3:05 – 4:05 · Task 3, the audio app
 
-Type a name, and **use a phone number already in the data — `09000000294`.**
-Record, say one sentence, stop, submit.
+**[DO]** Chrome tab 1. Type into the fields on camera:
 
-> "Task three. Name, phone, then record in the browser or upload a file. I'm using a
-> phone number that's already in the merged database — on purpose."
+- Name: `Rohit Verma`
+- Phone: `09000000294` ← **this exact number matters, it already exists in the data**
 
-When the properties table appears:
+**[SAY]**
+> "Task three. Name, phone, and then either record in the browser or upload a file.
+> I'm using a phone number that's already in the merged database — on purpose."
 
-> "The server extracts everything the brief asked for — duration, sample rate,
-> bitrate, loudness in dBFS — plus an SNR estimate, clipping and a quality grade.
+**[DO]** Click **● Record**, say one clear sentence (*"This is a test recording for the
+ConsultBae audio collection app."*), click **■ Stop**, then **Submit recording**.
+
+**[SCREEN]** The "Extracted properties" table: duration, sample rate, bitrate,
+loudness, peak, SNR, clipping, near-silence, codec/channels, quality pill, and
+**"Linked to person · #24 (phone)"**.
+
+**[SAY]**
+> "The server pulls out everything the brief asked for — duration, sample rate,
+> bitrate, loudness in dBFS — plus an SNR estimate, clipping percentage and a quality
+> grade.
 >
-> And look at this line: linked to person 24, matched by phone. Same phone key the
-> pipeline uses, so an existing applicant attaches to their record instead of becoming
-> a fifty-seventh person."
+> And look at this line: linked to person 24, matched by phone. It used the same phone
+> key the pipeline uses, so an existing applicant recording a clip attaches to their
+> record instead of becoming a fifty-seventh person."
 
-Switch to the submissions tab, refresh, play a clip for two seconds, then point at a
-`poor` row:
+**[DO]** Put the cursor on the "Linked to person" row as you say it. That one line is
+what proves Task 3 is wired into Task 1 — it must be on screen and pointed at.
 
-> "Second view — every clip with a player and its properties. The quality grade is
-> rules, not a model, deliberately: it says 'very noisy, SNR around 0.6 dB', so an ops
-> person can tell a worker what to fix. A model that outputs 0.31 helps nobody."
+**[DO]** Chrome tab 2, refresh. Play a clip for two seconds, then move the cursor to a
+row with a red **POOR** pill.
+
+**[SAY]**
+> "Second view — every clip with a player and its extracted properties. The quality
+> grade is rules, not a model, deliberately: it says 'very noisy, SNR around 0.6 dB',
+> so an ops person can tell a worker exactly what to fix. A model that outputs 0.31
+> helps nobody at 2am."
 
 ---
 
-### 4:05 – 4:40 — Hardest decision #2
+## SHOT 6 · 4:05 – 4:40 · Hardest decision #2 — bitrate
 
-*Open `src/audio_features.py`, scrolled to `extract`.*
+**[DO]** VS Code, `src/audio_features.py`, scrolled so `extract` and the `_ffprobe`
+call are both visible. Scroll slowly, once.
 
+**[SAY]**
 > "Second thing I got stuck on: bitrate. Duration, sample rate and loudness came off
-> the decoded signal in twenty minutes. Then I kept computing bitrate as sample rate
-> times bit depth times channels — 700 kbps for every file. Right for a WAV, completely
-> wrong for the WebM-Opus the browser uploads, where it's about 32.
+> the decoded signal in about twenty minutes. Then I kept computing bitrate as sample
+> rate times bit depth times channels — which gives 700 kbps for every file. That's
+> right for a WAV and completely wrong for the WebM-Opus blob the browser actually
+> uploads, where it should be about 32.
 >
 > What I had to accept is that once you decode to floats, the compression is gone —
 > bitrate is a property of the container, not the signal. So the extractor is two
 > layers: ffprobe for container truth, decoded samples for signal truth. And when
-> ffprobe reports no bitrate — which happens with Chrome recordings — I compute the
-> average from file size over duration instead of inventing a constant.
-"
-
-**Only if you're comfortably under time** — the third stuck-log item, ~15 seconds:
-
-> "Third, quickly: both HTML pages threw a 500 from inside Jinja's cache while the API
-> worked fine. It was the newer Starlette TemplateResponse signature — two-line fix.
-> What I rejected was pinning Starlette backwards to keep a deprecated call alive."
+> ffprobe reports no bitrate at all — which happens with Chrome recordings, because
+> MediaRecorder writes a live-stream container with no duration header — I compute the
+> real average from file size over duration instead of inventing a constant."
 
 ---
 
-### 4:40 – 5:25 — Data issues, scaling, close *(DATA_ISSUES.md)*
+## SHOT 7 · 4:40 – 5:25 · Data issues, scaling, close
 
-Scroll it while you talk:
+**[DO]** Chrome tab 5 — `DATA_ISSUES.md` on GitHub. Scroll steadily through the
+headings while you talk. Don't stop to read anything.
 
-> "Task four — 308 findings across 24 codes, each logged against the exact file and
-> row, so the report can't drift from the pipeline. Highlights: a repeated header row
-> inside source three, a row with rotated columns that turned out to be a duplicate
-> once repaired, CTC stored in two units in one column, and rates that are per-hour in
-> some rows and per-month in others — those don't reconcile, so I flagged it rather
-> than averaging it away.
+**[SAY]**
+> "Task four — the data issues report. 308 findings across 24 issue codes, and every
+> one is logged in a table tied to the exact file and row, so the report can't drift
+> from the pipeline. The ones I'd call out: a repeated header row in the middle of
+> source three, a row in source two with rotated columns that turned out to be a
+> duplicate once I repaired it, CTC stored in two different units in the same column,
+> and rates that are per-hour in some rows and per-month in others — those genuinely
+> don't reconcile, so I flagged that rather than averaging it away.
 >
-> Task five: what breaks at five thousand workers — synchronous ffmpeg on the request
-> thread first, SQLite's write lock second, local disk third.
+> Task five is the launch one-pager: what breaks at five thousand workers. Short
+> version — the synchronous ffmpeg call on the request thread breaks first, SQLite's
+> write lock second, local disk storage third.
 >
 > That's everything. Repo link's in the email — thanks for watching."
 
+**[DO]** Stop talking, wait one full second, stop the recording. Don't end on
+"umm… yeah… that's it."
+
 ---
 
-## If you're running long, cut in this order
+# PART 2 — Optional extras
 
-1. Playing back a clip on the submissions page
-2. The Task 5 sentence near the end
-(The Jinja stuck-log item and the SQLite-lock line are already outside the core
-script — add them only if you're comfortably under time.)
+Add these **only** if the take came in under 5:30. Never at the cost of going over 6.
 
-**Never cut:** the Arjun Mehta abstain story, the phone-matched link on submission,
-or the n8n flow actually executing. Those three are what's being scored.
+**A. Third stuck-log item** (~15s, after Shot 6):
+> "Third, quickly: both HTML pages threw a 500 from inside Jinja's template cache
+> while the whole API worked fine. It was the newer Starlette TemplateResponse
+> signature — request first, then template name. Two-line fix. What I rejected was
+> pinning Starlette backwards to keep a deprecated call working."
 
-## What loses marks
+**B. The SQLite-lock reason** (~10s, in Shot 4):
+> "It goes through my API rather than an SQLite node, because two processes holding
+> write locks on one SQLite file is how you get 'database is locked' at the worst
+> possible moment."
 
-- Reciting this flat. Talk, don't read.
-- Silent gaps while something loads. Keep narrating.
-- "I think" / "this should work". You built it — say what it does.
-- An n8n flow that isn't running. A screenshot of a canvas scores zero.
-- Going over six minutes.
+**C. Tests** (~8s, after Shot 3): run `python -m pytest -q`, let `57 passed` show.
+
+---
+
+# PART 3 — If you're running long, cut in this order
+
+1. Extras A, B, C (already optional)
+2. Playing back a clip on the submissions page (Shot 5)
+3. The `curl /api/stats` check (Shot 4) — the green checkmarks already proved it ran
+4. The Task 5 sentence (Shot 7)
+
+**Never cut:** the Arjun Mehta abstain story (Shot 3), the "linked to person 24,
+matched by phone" line (Shot 5), or the n8n flow actually executing (Shot 4). Those
+three are what's being scored.
+
+---
+
+# PART 4 — What loses marks
+
+- **Reciting this flat.** Talk. Slightly rough and confident beats polished and read.
+- **Silence while something loads.** Keep narrating — that's why every shot has you
+  talking *over* the action.
+- **"I think…", "this should work…"**. You built it — say what it does.
+- **An n8n flow that isn't running.** A screenshot of a canvas scores zero.
+- **"The AI wrote this."** AI use is allowed and it's in the README; on camera you
+  explain your system.
+- **Going over six minutes.** They wrote max 6. Twenty seconds under is a signal.
+- **Unreadable terminal text.** The most common failure in take-home videos.
+
+---
+
+# PART 5 — Take checklist
+
+Watch your own recording once with headphones before uploading:
+
+- [ ] Voice audible throughout, no clipping
+- [ ] Terminal text readable at normal playback size
+- [ ] The pipeline output block was actually on screen
+- [ ] The `match_review` line was visible during the Arjun Mehta story
+- [ ] n8n nodes visibly went green
+- [ ] "Linked to person #24 (phone)" was on screen and pointed at
+- [ ] Submissions list with play buttons appeared
+- [ ] Under 6:00
+- [ ] No notification popups, no personal tabs visible
+
+Then: Loom → Share → **anyone with the link can view** (check it in an incognito
+window — a private Loom link scores the same as no video), and reply to Parul's email
+with the repo link and the video link.

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block n2 %}on{% endblock %}
+{% block body %}
+<h1>Submissions</h1>
+<p class="sub">Every clip with its extracted properties and the person it resolved to in the merged database.</p>
+
+<div class="stats">
+  <div class="stat"><b>{{ stats['n'] }}</b><span>clips</span></div>
+  <div class="stat"><b>{{ stats['minutes'] }}</b><span>minutes of audio</span></div>
+  <div class="stat"><b>{{ stats['linked'] }}</b><span>linked to a person</span></div>
+  <div class="stat"><b>{{ stats['good'] }}</b><span>graded good</span></div>
+</div>
+
+{% if not rows %}
+  <div class="card muted">Nothing submitted yet. <a href="/">Record or upload a clip.</a></div>
+{% else %}
+<div class="card" style="padding:6px 10px">
+<table class="wide">
+  <colgroup>
+    <col style="width:3%"><col style="width:15%"><col style="width:12%">
+    <col style="width:8%"><col style="width:9%"><col style="width:8%">
+    <col style="width:9%"><col style="width:8%"><col style="width:17%"><col style="width:11%">
+  </colgroup>
+  <thead>
+    <tr>
+      <th>#</th><th>Person</th><th>Play</th>
+      <th>Duration</th><th>Sample&nbsp;rate</th><th>Bitrate</th><th>Loudness</th>
+      <th>SNR</th><th>Quality</th><th>Submitted</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td class="num">{{ r['submission_id'] }}</td>
+      <td>
+        <div>{{ r['person_name'] or r['submitted_name'] }}</div>
+        <div class="note">{{ r['submitted_phone'] }}
+          {% if r['person_id'] %}· person #{{ r['person_id'] }} ({{ r['matched_by'].replace('_',' ') }}){% endif %}
+          {% if r['skill_category'] %}· {{ r['skill_category'] }}{% endif %}
+        </div>
+      </td>
+      <td><audio controls preload="none" src="/api/audio/{{ r['submission_id'] }}"></audio></td>
+      <td class="num">{{ '%.2f'|format(r['duration_sec']) if r['duration_sec'] is not none else '—' }} s</td>
+      <td class="num">{{ r['sample_rate_khz'] }} kHz</td>
+      <td class="num">{{ '%.0f'|format(r['bitrate_kbps']) if r['bitrate_kbps'] is not none else '—' }} kbps</td>
+      <td class="num">{{ r['loudness_db'] }} dB</td>
+      <td class="num">{{ r['est_snr_db'] }} dB</td>
+      <td>
+        <span class="pill {{ r['quality_label'] }}">{{ r['quality_label'] }}</span>
+        <div class="note">{{ r['quality_notes'] }}</div>
+      </td>
+      <td class="num note">{{ r['created_at'] }}<br>
+        {{ r['codec'] }} · {{ r['channels'] }}ch · clip {{ r['clipping_pct'] }}%</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

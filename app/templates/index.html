@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block n1 %}on{% endblock %}
+{% block body %}
+<h1>Submit a recording</h1>
+<p class="sub">Record in the browser or upload a file. Duration, sample rate, bitrate, loudness
+and a quality estimate are extracted server-side and written to the merged database.</p>
+
+<form id="f" class="card" autocomplete="off">
+  <div class="row">
+    <div>
+      <label for="name">Full name</label>
+      <input id="name" name="name" type="text" placeholder="Rohit Verma" required>
+    </div>
+    <div>
+      <label for="phone">Phone number</label>
+      <input id="phone" name="phone" type="tel" placeholder="+91 90000 00294 / 09000000294" required>
+      <p class="note" style="margin:6px 0 0">If this number already exists in the merged
+        database the recording is attached to that person instead of creating a new one.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:18px">
+    <label>Audio</label>
+    <div class="row" style="align-items:center">
+      <div style="flex:0 0 auto">
+        <button type="button" id="rec" class="ghost">● Record</button>
+        <button type="button" id="stop" class="ghost" disabled>■ Stop</button>
+        <span id="timer" class="muted" style="margin-left:8px">0.0s</span>
+      </div>
+      <div style="flex:0 0 auto">
+        <input type="file" id="file" accept="audio/*" style="color:var(--muted)">
+      </div>
+    </div>
+    <audio id="preview" controls style="display:none;width:100%;margin-top:12px"></audio>
+  </div>
+
+  <div style="margin-top:20px;display:flex;gap:10px;align-items:center">
+    <button id="send" type="submit" disabled>Submit recording</button>
+    <span id="msg" class="muted"></span>
+  </div>
+</form>
+
+<div id="result" class="card" style="display:none">
+  <h1 style="font-size:16px">Extracted properties</h1>
+  <table id="props"></table>
+</div>
+
+<script>
+let blob = null, rec = null, chunks = [], t0 = 0, timerId = null;
+const $ = id => document.getElementById(id);
+
+function ready(){ $('send').disabled = !blob; }
+function setBlob(b, label){
+  blob = b;
+  $('preview').src = URL.createObjectURL(b);
+  $('preview').style.display = 'block';
+  $('msg').textContent = label + ' · ' + (b.size/1024).toFixed(0) + ' KB';
+  ready();
+}
+
+$('file').addEventListener('change', e => {
+  if (e.target.files[0]) setBlob(e.target.files[0], e.target.files[0].name);
+});
+
+$('rec').addEventListener('click', async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:false}});
+    // let the browser pick a container it can actually produce (Safari: mp4, Chrome/FF: webm)
+    const mime = ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus']
+                   .find(m => MediaRecorder.isTypeSupported(m)) || '';
+    rec = new MediaRecorder(stream, mime ? {mimeType: mime} : undefined);
+    chunks = [];
+    rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+    rec.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      clearInterval(timerId);
+      setBlob(new Blob(chunks, {type: rec.mimeType}), 'recorded clip');
+    };
+    rec.start();
+    t0 = Date.now();
+    timerId = setInterval(() => $('timer').textContent = ((Date.now()-t0)/1000).toFixed(1)+'s', 100);
+    $('rec').disabled = true; $('stop').disabled = false; $('msg').textContent = 'recording…';
+  } catch (err) {
+    $('msg').textContent = 'microphone blocked: ' + err.message + ' — upload a file instead';
+  }
+});
+
+$('stop').addEventListener('click', () => {
+  if (rec && rec.state !== 'inactive') rec.stop();
+  $('rec').disabled = false; $('stop').disabled = true;
+});
+
+$('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!blob) return;
+  const ext = (blob.type.includes('mp4') ? '.mp4' : blob.type.includes('ogg') ? '.ogg'
+             : blob.type.includes('wav') ? '.wav' : blob.name ? '' : '.webm');
+  const fd = new FormData();
+  fd.append('name', $('name').value);
+  fd.append('phone', $('phone').value);
+  fd.append('audio', blob, blob.name || ('clip' + ext));
+  $('send').disabled = true; $('msg').textContent = 'uploading & analysing…';
+  const res = await fetch('/api/submissions', {method:'POST', body: fd});
+  const data = await res.json();
+  if (!res.ok) { $('msg').textContent = 'error: ' + (data.detail || res.status); $('send').disabled = false; return; }
+
+  const p = data.properties;
+  const rows = [
+    ['Duration', p.duration_sec + ' s'],
+    ['Sample rate', p.sample_rate_khz + ' kHz'],
+    ['Bitrate', p.bitrate_kbps + ' kbps'],
+    ['Loudness', p.loudness_db + ' dBFS'],
+    ['Peak', p.peak_db + ' dBFS'],
+    ['Estimated SNR', p.est_snr_db + ' dB'],
+    ['Clipping', p.clipping_pct + ' %'],
+    ['Near-silence', p.silence_pct + ' %'],
+    ['Codec / channels', p.codec + ' / ' + p.channels],
+    ['Quality', '<span class="pill ' + p.quality_label + '">' + p.quality_label + '</span> ' + p.quality_notes],
+    ['Linked to person', '#' + data.person_id + ' (' + data.matched_by.replace('_',' ') + ')'],
+  ];
+  if (data.duplicate_of) rows.push(['Duplicate of', 'submission #' + data.duplicate_of]);
+  $('props').innerHTML = rows.map(r => '<tr><th>'+r[0]+'</th><td>'+r[1]+'</td></tr>').join('');
+  $('result').style.display = 'block';
+  $('msg').innerHTML = 'saved as submission #' + data.submission_id + ' · <a href="/submissions">view all</a>';
+  $('send').disabled = false;
+});
+</script>
+{% endblock %}

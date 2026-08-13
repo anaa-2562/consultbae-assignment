@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ConsultBae Audio Collection{% endblock %}</title>
+  <style>
+    :root{
+      --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+      --ink:#e8eaf0; --muted:#9aa3b2; --accent:#4f8cff; --good:#3ecf8e;
+      --fair:#f5b544; --poor:#ef5f6b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);
+         font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+    header{border-bottom:1px solid var(--line);padding:14px 22px;display:flex;
+           gap:20px;align-items:center;background:var(--panel)}
+    header b{font-size:15px;letter-spacing:.2px}
+    header a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:7px}
+    header a:hover,header a.on{color:var(--ink);background:var(--panel2)}
+    main{max-width:1080px;margin:0 auto;padding:26px 22px 60px}
+    h1{font-size:21px;margin:0 0 4px}
+    .sub{color:var(--muted);margin:0 0 22px;font-size:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px}
+    label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+    input[type=text],input[type=tel]{width:100%;padding:10px 12px;border-radius:8px;
+      border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-size:15px}
+    .row{display:flex;gap:14px;flex-wrap:wrap}
+    .row>div{flex:1 1 220px}
+    button{font:inherit;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;
+      background:var(--accent);color:#fff;font-weight:600}
+    button.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;
+      text-transform:uppercase;padding:3px 8px;border-radius:20px}
+    .good{background:rgba(62,207,142,.14);color:var(--good)}
+    .fair{background:rgba(245,181,68,.14);color:var(--fair)}
+    .poor{background:rgba(239,95,107,.14);color:var(--poor)}
+    table{width:100%;border-collapse:collapse;font-size:13.5px}
+    table.wide{table-layout:fixed}
+    table.wide td,table.wide th{overflow-wrap:anywhere}
+    table.wide td.num{white-space:normal}
+    th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+    th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.2px}
+    td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+    audio{height:32px;width:100%;max-width:170px}
+    .muted{color:var(--muted)}
+    .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:120px}
+    .stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+    .stat span{color:var(--muted);font-size:12px}
+    code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12.5px}
+    .note{font-size:12.5px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <b>ConsultBae · Audio Collection</b>
+    <nav>
+      <a href="/" class="{% block n1 %}{% endblock %}">Submit</a>
+      <a href="/submissions" class="{% block n2 %}{% endblock %}">Submissions</a>
+      <a href="/docs" target="_blank">API</a>
+    </nav>
+  </header>
+  <main>{% block body %}{% endblock %}</main>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# One-click free deploy on Render. ffmpeg is available in Render's native runtime.
+services:
+  - type: web
+    name: consultbae-audio
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -m src.pipeline --quiet
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"

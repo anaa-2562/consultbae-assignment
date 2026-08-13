@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+
+# built artefacts - rebuild with `python -m src.pipeline`
+data/consultbae.db
+data/consultbae.db-wal
+data/consultbae.db-shm
+
+# uploaded audio (sample clips are kept, see data/audio/samples)
+data/audio/*
+!data/audio/.gitkeep

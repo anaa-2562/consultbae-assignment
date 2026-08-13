@@ -1,0 +1,25 @@
+# Versions below are the ones this repo was built and tested against.
+# Loosened to >= because nothing here uses a version-specific API, with one
+# exception noted in the stuck log: Starlette's newer TemplateResponse signature
+# (request, name, context), which FastAPI >= 0.115 expects.
+
+# Task 1 - merge pipeline
+rapidfuzz>=3.9                 # tested: 3.14.5
+
+# Task 3 - app + audio
+fastapi>=0.115                 # tested: 0.141.1
+uvicorn[standard]>=0.30        # tested: 0.46.0
+python-multipart>=0.0.9        # tested: 0.0.26
+jinja2>=3.1                    # tested: 3.1.6
+numpy>=1.26                    # tested: 2.4.4
+soundfile>=0.12                # tested: 0.14.0
+librosa>=0.10                  # tested: 0.11.0   (spectral flatness only)
+
+# tests
+pytest>=8.0                    # tested: 9.1.1
+
+# NOTE: ffmpeg/ffprobe are SYSTEM dependencies, not pip packages. Both are
+# required - ffprobe reads container bitrate/codec, ffmpeg decodes WebM/Opus.
+#   Ubuntu/Debian : sudo apt install ffmpeg
+#   macOS         : brew install ffmpeg
+#   Windows       : winget install Gyan.FFmpeg
